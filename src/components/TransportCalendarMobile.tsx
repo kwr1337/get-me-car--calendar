@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import BookingCard from "./BookingCard";
 import RentalModal from "./RentalModal";
 import { generateDateRange, getMinMaxDates, calculateColSpan } from "../utils/dateUtils";
+import {ClipLoader} from "react-spinners";
 
 interface TransportCalendarProps {
   vehicals: {
@@ -38,58 +39,58 @@ const TransportCalendarMobile: React.FC<TransportCalendarProps> = ({ vehicals })
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { minDate, maxDate } = getMinMaxDates(
-    vehicals.flatMap((vehical) => vehical.rents)
+      vehicals.flatMap((vehical) => vehical.rents)
   );
 
   const validDate = (date: Date): boolean => !isNaN(date.getTime());
 
   const minDateStr = validDate(minDate)
-    ? minDate.toISOString().split("T")[0]
-    : "";
+      ? minDate.toISOString().split("T")[0]
+      : "";
   const maxDateStr = validDate(maxDate)
-    ? maxDate.toISOString().split("T")[0]
-    : "";
+      ? maxDate.toISOString().split("T")[0]
+      : "";
   const dates: string[] =
-    validDate(minDate) && validDate(maxDate)
-      ? generateDateRange(minDateStr, maxDateStr)
-      : [];
+      validDate(minDate) && validDate(maxDate)
+          ? generateDateRange(minDateStr, maxDateStr)
+          : [];
 
   const groupedBookings = vehicals.reduce<Record<number, any[]>>(
-    (acc, vehical) => {
-      vehical.rents.forEach((rent) => {
-        const numericId = vehical.id;
-        if (!acc[numericId]) {
-          acc[numericId] = [];
-        }
-        acc[numericId].push({
-          ...rent,
-          startDate: new Date(rent.start_date).toISOString().split("T")[0],
-          endDate: new Date(rent.end_date).toISOString().split("T")[0],
-          colSpan: calculateColSpan(
-            new Date(rent.start_date).toISOString().split("T")[0],
-            new Date(rent.end_date).toISOString().split("T")[0],
-            dates
-          ),
-          isContinuous: false,
+      (acc, vehical) => {
+        vehical.rents.forEach((rent) => {
+          const numericId = vehical.id;
+          if (!acc[numericId]) {
+            acc[numericId] = [];
+          }
+          acc[numericId].push({
+            ...rent,
+            startDate: new Date(rent.start_date).toISOString().split("T")[0],
+            endDate: new Date(rent.end_date).toISOString().split("T")[0],
+            colSpan: calculateColSpan(
+                new Date(rent.start_date).toISOString().split("T")[0],
+                new Date(rent.end_date).toISOString().split("T")[0],
+                dates
+            ),
+            isContinuous: false,
+          });
         });
-      });
-      return acc;
-    },
-    {}
+        return acc;
+      },
+      {}
   );
 
   const handleVehicleInfo = (
-    rent: any,
-    vehicle: {
-      id: number;
-      name: string;
-      type: string;
-      class: string;
-      brand: string;
-      model: string;
-      engine_type: string;
-      edit_url: string;
-    }
+      rent: any,
+      vehicle: {
+        id: number;
+        name: string;
+        type: string;
+        class: string;
+        brand: string;
+        model: string;
+        engine_type: string;
+        edit_url: string;
+      }
   ) => {
     setSelectedRent(rent);
     setVehicle(vehicle);
@@ -117,43 +118,46 @@ const TransportCalendarMobile: React.FC<TransportCalendarProps> = ({ vehicals })
   };
 
   return (
-    <>
-      <main className="mobile-calendar-container" ref={containerRef}>
-        {vehicals.length > 0 ? (
-          vehicals.map((vehical) => (
-            <BookingCard
-              key={vehical.id}
-              vehicle={{
-                id: vehical.id,
-                name: vehical.name,
-                type: vehical.type,
-                class: vehical.class,
-                brand: vehical.brand,
-                model: vehical.model,
-                engine_type: vehical.engine_type,
-                edit_url: vehical.edit_url,
-              }}
-              bookings={groupedBookings[vehical.id] || []}
-              dates={dates}
-              onClick={(rent, vehicle) => handleVehicleInfo(rent, vehicle)}
-              onAddClick={(vehicle) => handleOpenRentalForm(vehicle)}
+      <>
+        <main className="mobile-calendar-container" ref={containerRef}>
+          {vehicals.length > 0 ? (
+              vehicals.map((vehical) => (
+                  <BookingCard
+                      key={vehical.id}
+                      vehicle={{
+                        id: vehical.id,
+                        name: vehical.name,
+                        type: vehical.type,
+                        class: vehical.class,
+                        brand: vehical.brand,
+                        model: vehical.model,
+                        engine_type: vehical.engine_type,
+                        edit_url: vehical.edit_url,
+                      }}
+                      bookings={groupedBookings[vehical.id] || []}
+                      dates={dates}
+                      onClick={(rent, vehicle) => handleVehicleInfo(rent, vehicle)}
+                      onAddClick={(vehicle) => handleOpenRentalForm(vehicle)}
+                  />
+              ))
+          ) : (
+              <div style={{textAlign: "center", margin: "20px"}}>
+                <ClipLoader color="#007bff" size={50}/>
+              </div>
+              // <div className="no-data-placeholder">
+              //   <p>Нет данных о транспортных средствах</p>
+              // </div>
+          )}
+        </main>
+        {selectedRent && (
+            <RentalModal
+                isOpen={!!selectedRent}
+                onClose={() => setSelectedRent(null)}
+                rent={selectedRent}
+                vehicle={vehicle}
             />
-          ))
-        ) : (
-          <div className="no-data-placeholder">
-            <p>Нет данных о транспортных средствах</p>
-          </div>
         )}
-      </main>
-      {selectedRent && (
-        <RentalModal
-          isOpen={!!selectedRent}
-          onClose={() => setSelectedRent(null)}
-          rent={selectedRent}
-          vehicle={vehicle}
-        />
-      )}
-    </>
+      </>
   );
 };
 
